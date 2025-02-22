@@ -98,7 +98,7 @@ public class PlayfairCipher {
         for (int i = 0; i < text.length(); i++) {
             // Don't add 'X' if it's an artificial padding
             if (i > 0 && text.charAt(i) == 'X' &&
-                    (i == text.length() - 1 || text.charAt(i - 1) == text.charAt(i + 1))) {
+                    (i == text.length() - 1 || (text.charAt(i - 1) == text.charAt(i + 1) && i % 2 != 0))) {
                 continue;
             }
             result.append(text.charAt(i));
@@ -109,8 +109,11 @@ public class PlayfairCipher {
     // TODO: Implement this method to decrypt the ciphertext back to plaintext
     public String decrypt(String text) {
         StringBuilder decryptedText = new StringBuilder();
-
-        for (int i = 0; i < text.length(); i += 2) {
+        int len = text.length();
+        if(text.charAt(len-1) == 'X' && len % 2 != 0){
+            len--;
+        }
+        for (int i = 0; i < len; i += 2) {
             int[] pos1 = findPosition(text.charAt(i));
             int[] pos2 = findPosition(text.charAt(i + 1));
 
