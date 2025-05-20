@@ -1,10 +1,24 @@
 package Security;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
 public class DiffieHellman {
+
+    // Manual modular exponentiation: base^exp % mod using long
+    private long modPow(long base, long exp, long mod) {
+        long result = 1;
+        base %= mod;
+        while (exp > 0) {
+            if ((exp & 1) == 1)
+                result = (result * base) % mod;
+
+            base = (base * base) % mod;
+            exp >>= 1;
+        }
+        return result;
+    }
+
     /**
      * Performs a Diffie–Hellman key exchange simulation.
      *
@@ -19,25 +33,10 @@ public class DiffieHellman {
      *         KB = YA^xb mod q.
      */
     public List<Integer> getKeys(int q, int alpha, int xa, int xb) {
-        // Use BigInteger for safe modular exponentiation
-        BigInteger bigQ     = BigInteger.valueOf(q);
-        BigInteger bigAlpha = BigInteger.valueOf(alpha);
-        BigInteger bigXa    = BigInteger.valueOf(xa);
-        BigInteger bigXb    = BigInteger.valueOf(xb);
-
-        // Compute public values
-        BigInteger YA = bigAlpha.modPow(bigXa, bigQ);
-        BigInteger YB = bigAlpha.modPow(bigXb, bigQ);
-
-        // Compute shared secrets
-        BigInteger KA = YB.modPow(bigXa, bigQ);
-        BigInteger KB = YA.modPow(bigXb, bigQ);
-
-        // Return as ints
-        return Arrays.asList(
-                KA.intValue(),
-                KB.intValue()
-        );
+        long YA = modPow(alpha, xa, q);
+        long YB = modPow(alpha, xb, q);
+        long KA = modPow(YB, xa, q);
+        long KB = modPow(YA, xb, q);
+        return Arrays.asList((int)KA, (int)KB);
     }
-
 }

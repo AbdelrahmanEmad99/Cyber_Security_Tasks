@@ -1,56 +1,53 @@
 package Security;
 
-import java.math.BigInteger;
-
 public class RSA {
 
-    /**
-     * Encrypts a message M using RSA.
-     * @param p   first prime
-     * @param q   second prime
-     * @param M   plaintext message (0 <= M < p*q)
-     * @param e   public exponent (must be co-prime to phi(n))
-     * @return    ciphertext C = M^e mod n
-     */
+    private long modPow(long base, long exp, long mod) {
+        long result = 1;
+        base %= mod;
+        while (exp > 0) {
+            if ((exp & 1) == 1)
+                result = (result * base) % mod;
+
+            base = (base * base) % mod;
+            exp >>= 1;
+        }
+        return result;
+    }
+
+    private long modInverse(long a, long m) {
+        long m0 = m, t, q;
+        long x0 = 0, x1 = 1;
+
+        if (m == 1)
+            return 0;
+
+        while (a > 1) {
+            q = a / m;
+            t = m;
+            m = a % m;
+            a = t;
+
+            t = x0;
+            x0 = x1 - q * x0;
+            x1 = t;
+        }
+
+        if (x1 < 0)
+            x1 += m0;
+
+        return x1;
+    }
+
     public int encrypt(int p, int q, int M, int e) {
-        BigInteger bigP = BigInteger.valueOf(p);
-        BigInteger bigQ = BigInteger.valueOf(q);
-        BigInteger n    = bigP.multiply(bigQ);
-        BigInteger message = BigInteger.valueOf(M);
-        BigInteger exp = BigInteger.valueOf(e);
-
-        // C = M^e mod n
-        BigInteger C = message.modPow(exp, n);
-        return C.intValue();
+        long n = (long) p * q;
+        return (int) modPow(M, e, n);
     }
 
-    /**
-     * Decrypts a ciphertext C using RSA.
-     * @param p   first prime
-     * @param q   second prime
-     * @param C   ciphertext
-     * @param e   public exponent (same e used during encryption)
-     * @return    decrypted plaintext M = C^d mod n
-     */
     public int decrypt(int p, int q, int C, int e) {
-        BigInteger bigP = BigInteger.valueOf(p);
-        BigInteger bigQ = BigInteger.valueOf(q);
-        BigInteger n    = bigP.multiply(bigQ);
-
-        // Compute phi(n) = (p-1)*(q-1)
-        BigInteger phi = bigP.subtract(BigInteger.ONE)
-                .multiply(bigQ.subtract(BigInteger.ONE));
-
-        // Compute private exponent d ≡ e⁻¹ mod phi
-        BigInteger exp = BigInteger.valueOf(e);
-        BigInteger d = exp.modInverse(phi);
-
-        BigInteger cipher = BigInteger.valueOf(C);
-
-        // M = C^d mod n
-        BigInteger M = cipher.modPow(d, n);
-        return M.intValue();
+        long n = (long) p * q;
+        long phi = (long) (p - 1) * (q - 1);
+        long d = modInverse(e, phi);
+        return (int) modPow(C, d, n);
     }
-
-
 }
